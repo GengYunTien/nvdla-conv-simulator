@@ -34,17 +34,32 @@ FROM ubuntu:22.04
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     git make cmake g++ flex bison \
-    perl libyaml-perl libxml-simple-perl \
+    clang \
+    perl libyaml-perl libxml-simple-perl libio-tee-perl libcapture-tiny-perl \
     python2 python3 \
     default-jdk \
     libfl2 zlib1g wget curl vim \
  && rm -rf /var/lib/apt/lists/*
+
+RUN ln -s /usr/bin/python3 /usr/local/bin/python
+
 COPY --from=build-verilator /opt/verilator /opt/verilator
 COPY --from=build-systemc   /opt/systemc   /opt/systemc
+
+RUN ln -s /opt/verilator/share/verilator/include /opt/verilator/include
+
 ENV PATH="/opt/verilator/bin:$PATH"
 ENV VERILATOR_ROOT=/opt/verilator
 ENV SYSTEMC_HOME=/opt/systemc
 ENV LD_LIBRARY_PATH="/opt/systemc/lib:$LD_LIBRARY_PATH"
 ENV CPLUS_INCLUDE_PATH="/opt/systemc/include"
+
+ENV JAVA=java \
+    PERL=/usr/bin/perl \
+    CPP=cpp \
+    VERILATOR=/opt/verilator/bin/verilator \
+    CLANG=clang \
+    VERILATOR_PARAMS="--compiler clang --output-split 250000000 -Wno-WIDTH -Wno-LITENDIAN"
+
 WORKDIR /workspace
 CMD ["/bin/bash"]
